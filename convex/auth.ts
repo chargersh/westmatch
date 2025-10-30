@@ -4,11 +4,13 @@ import {
   type GenericCtx,
 } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { requireActionCtx } from "@convex-dev/better-auth/utils";
 import { betterAuth } from "better-auth";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { action, query } from "./_generated/server";
+import { sendEmailVerification, sendResetPassword } from "./email";
 
 const siteUrlEnv = process.env.SITE_URL;
 if (!siteUrlEnv) {
@@ -69,9 +71,25 @@ function createAuth(
     baseURL: siteUrl,
     trustedOrigins: [siteUrl],
     database: authComponent.adapter(ctx),
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendEmailVerification(requireActionCtx(ctx), {
+          to: user.email,
+          username: user.name,
+          verificationLink: url,
+        });
+      },
+      sendOnSignUp: true,
+    },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false,
+      sendResetPassword: async ({ user, url }) => {
+        await sendResetPassword(requireActionCtx(ctx), {
+          to: user.email,
+          username: user.name,
+          resetLink: url,
+        });
+      },
     },
     plugins: [convex()],
   });
@@ -86,7 +104,7 @@ export const getCurrentUser = query({
   handler: async (ctx) => authComponent.getAuthUser(ctx),
 });
 
-export const signUp = mutation({
+export const signUp = action({
   args: {
     email: v.string(),
     password: v.string(),

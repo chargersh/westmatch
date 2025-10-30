@@ -33,7 +33,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 8;
-const API_ERROR_REGEX = /Uncaught APIError: (.+)/;
 
 const signupSchema = z
   .object({
@@ -77,24 +76,23 @@ export function SignupForm({
     onSubmit: async ({ value }) => {
       setIsSubmitting(true);
       try {
-        await signUp({
+        const result = await signUp({
           email: value.email,
           password: value.password,
           name: value.name,
         });
 
-        toast.success("Account created! You can now log in");
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
 
+        toast.success(result.message);
         router.push("/auth/login");
       } catch (error) {
         // biome-ignore lint/suspicious/noConsole: error logging for debugging
         console.error("Signup error:", error);
-        let message = "Failed to create account";
-        if (error instanceof Error) {
-          const match = error.message.match(API_ERROR_REGEX);
-          message = match?.[1] ?? error.message;
-        }
-        toast.error(message);
+        toast.error("An unexpected error occurred");
       } finally {
         setIsSubmitting(false);
       }

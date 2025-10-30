@@ -18,6 +18,9 @@
     "rules": {
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "style": {
+        "useFilenamingConvention": "off"
       }
     }
   }
