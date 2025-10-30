@@ -28,6 +28,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,8 @@ export function ResetPasswordForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const tokenValue = (token ?? "").trim();
+  const isTokenValid = tokenValue.length > 0;
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -67,7 +70,7 @@ export function ResetPasswordForm({
       onSubmit: resetPasswordSchema,
     },
     onSubmit: async ({ value }) => {
-      if (!token) {
+      if (!isTokenValid) {
         toast.error("Invalid or expired reset link");
         return;
       }
@@ -76,7 +79,7 @@ export function ResetPasswordForm({
       try {
         const result = await authClient.resetPassword({
           newPassword: value.password,
-          token,
+          token: tokenValue,
         });
 
         if (result.error) {
@@ -203,7 +206,8 @@ export function ResetPasswordForm({
               </form.Field>
 
               <Field>
-                <Button disabled={isSubmitting || !token} type="submit">
+                <Button disabled={isSubmitting || !isTokenValid} type="submit">
+                  {isSubmitting && <Spinner />}
                   {isSubmitting ? "Resetting..." : "Reset Password"}
                 </Button>
                 <FieldDescription className="text-center">

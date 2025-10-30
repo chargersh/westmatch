@@ -30,6 +30,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -264,6 +265,7 @@ export function SignupForm({
 
               <Field>
                 <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting && <Spinner />}
                   {isSubmitting ? "Creating account..." : "Create Account"}
                 </Button>
                 <FieldDescription className="text-center">

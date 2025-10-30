@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +117,7 @@ export function ForgotPasswordForm({
               </form.Field>
               <Field>
                 <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting && <Spinner />}
                   {isSubmitting ? "Sending..." : "Send Reset Link"}
                 </Button>
                 <FieldDescription className="text-center">

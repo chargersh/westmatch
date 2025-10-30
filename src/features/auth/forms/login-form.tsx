@@ -29,6 +29,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -176,6 +177,7 @@ export function LoginForm({
               </form.Field>
               <Field>
                 <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting && <Spinner />}
                   {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">
