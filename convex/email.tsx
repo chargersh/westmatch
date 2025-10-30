@@ -9,7 +9,23 @@ import VerificationEmail from "./emails/verification_email";
 
 export const resend = new Resend(components.resend, {
   testMode: false,
+  //onEmailEvent: internal.email.handleEmailEvent,
 });
+
+// This callback below may be used for any business logic
+
+/*
+export const handleEmailEvent = internalMutation({
+  args: {
+    id: v.EmailId,
+    event: v.EmailEvent,
+  },
+  handler: async (ctx, args) => {
+    console.log("Email event received:", args.event);
+  },
+});
+};
+*/
 
 export const sendEmailVerification = async (
   ctx: ActionCtx,
