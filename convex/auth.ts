@@ -29,6 +29,16 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
           userId: doc._id,
           email: doc.email,
           name: doc.name,
+          emailVerified: doc.emailVerified,
+          image: doc.image ?? undefined,
+          username: doc.username ?? undefined,
+          displayUsername: doc.displayUsername ?? undefined,
+          phoneNumber: doc.phoneNumber ?? undefined,
+          phoneNumberVerified: doc.phoneNumberVerified ?? undefined,
+          twoFactorEnabled: doc.twoFactorEnabled ?? undefined,
+          isAnonymous: doc.isAnonymous ?? undefined,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
         });
       },
       onUpdate: async (ctx, newDoc, oldDoc) => {
@@ -41,6 +51,15 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
           await ctx.db.patch(user._id, {
             email: newDoc.email,
             name: newDoc.name,
+            emailVerified: newDoc.emailVerified,
+            image: newDoc.image ?? undefined,
+            username: newDoc.username ?? undefined,
+            displayUsername: newDoc.displayUsername ?? undefined,
+            phoneNumber: newDoc.phoneNumber ?? undefined,
+            phoneNumberVerified: newDoc.phoneNumberVerified ?? undefined,
+            twoFactorEnabled: newDoc.twoFactorEnabled ?? undefined,
+            isAnonymous: newDoc.isAnonymous ?? undefined,
+            updatedAt: newDoc.updatedAt,
           });
         }
       },
