@@ -1,9 +1,14 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import {
+  type AuthFunctions,
+  createClient,
+  type GenericCtx,
+} from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth";
-import { components } from "./_generated/api";
+import { v } from "convex/values";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 const siteUrlEnv = process.env.SITE_URL;
 if (!siteUrlEnv) {
@@ -11,7 +16,47 @@ if (!siteUrlEnv) {
 }
 const siteUrl: string = siteUrlEnv;
 
-export const authComponent = createClient<DataModel>(components.betterAuth);
+const authFunctions: AuthFunctions = internal.auth;
+
+export const authComponent = createClient<DataModel>(components.betterAuth, {
+  authFunctions,
+  triggers: {
+    user: {
+      onCreate: async (ctx, doc) => {
+        await ctx.db.insert("users", {
+          userId: doc._id,
+          email: doc.email,
+          name: doc.name,
+        });
+      },
+      onUpdate: async (ctx, newDoc, oldDoc) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_userId", (q) => q.eq("userId", oldDoc._id))
+          .unique();
+
+        if (user) {
+          await ctx.db.patch(user._id, {
+            email: newDoc.email,
+            name: newDoc.name,
+          });
+        }
+      },
+      onDelete: async (ctx, doc) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_userId", (q) => q.eq("userId", doc._id))
+          .unique();
+
+        if (user) {
+          await ctx.db.delete(user._id);
+        }
+      },
+    },
+  },
+});
+
+export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
 
 function createAuth(
   ctx: GenericCtx<DataModel>,
@@ -39,4 +84,26 @@ export { createAuth };
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => authComponent.getAuthUser(ctx),
+});
+
+export const signUp = mutation({
+  args: {
+    email: v.string(),
+    password: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { auth, headers } = await authComponent.getAuth(createAuth, ctx);
+
+    const result = await auth.api.signUpEmail({
+      body: {
+        email: args.email,
+        password: args.password,
+        name: args.name,
+      },
+      headers,
+    });
+
+    return result;
+  },
 });

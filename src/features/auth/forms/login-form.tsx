@@ -3,6 +3,7 @@
 import { useForm } from "@tanstack/react-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,6 +29,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -46,7 +48,9 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -56,20 +60,29 @@ export function LoginForm({
     validators: {
       onSubmit: loginSchema,
     },
-    onSubmit: ({ value }) => {
-      toast("You submitted the following values:", {
-        description: (
-          <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-background p-4 text-code-foreground">
-            <code>{JSON.stringify(value, null, 2)}</code>
-          </pre>
-        ),
-        classNames: {
-          content: "flex flex-col gap-2",
-        },
-        style: {
-          "--border-radius": "calc(var(--radius)  + 4px)",
-        } as React.CSSProperties,
-      });
+    onSubmit: async ({ value }) => {
+      setIsSubmitting(true);
+      try {
+        const result = await authClient.signIn.email({
+          email: value.email,
+          password: value.password,
+        });
+
+        if (result.error) {
+          toast.error(result.error.message || "Login failed");
+          return;
+        }
+
+        toast.success("Login successful!");
+
+        router.push("/");
+      } catch (error) {
+        // biome-ignore lint/suspicious/noConsole: error logging for debugging
+        console.error("Login error:", error);
+        toast.error("Login failed");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
@@ -162,7 +175,9 @@ export function LoginForm({
                 }}
               </form.Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Logging in..." : "Login"}
+                </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}
                   <Link className="underline" href="/auth/signup">

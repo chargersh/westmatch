@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
 const forgotPasswordSchema = z.object({
@@ -32,6 +34,8 @@ export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -39,10 +43,31 @@ export function ForgotPasswordForm({
     validators: {
       onSubmit: forgotPasswordSchema,
     },
-    onSubmit: ({ value }) => {
-      toast.success("Password reset link sent!", {
-        description: `If an account exists for ${value.email}, you will receive a password reset link shortly.`,
-      });
+    onSubmit: async ({ value }) => {
+      setIsSubmitting(true);
+      try {
+        const result = await authClient.forgetPassword({
+          email: value.email,
+          redirectTo: "/auth/reset-password",
+        });
+
+        if (result.error) {
+          toast.error(
+            result.error.message || "Failed to send password reset link"
+          );
+          return;
+        }
+
+        toast.success("Password reset link sent!", {
+          description: `If an account exists for ${value.email}, you will receive a password reset link shortly.`,
+        });
+      } catch (error) {
+        // biome-ignore lint/suspicious/noConsole: error logging for debugging
+        console.error("Forgot password error:", error);
+        toast.error("Failed to send password reset link");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
@@ -90,7 +115,9 @@ export function ForgotPasswordForm({
                 }}
               </form.Field>
               <Field>
-                <Button type="submit">Send Reset Link</Button>
+                <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Sending..." : "Send Reset Link"}
+                </Button>
                 <FieldDescription className="text-center">
                   Remember your password?{" "}
                   <Link className="underline" href="/auth/login">

@@ -3,6 +3,7 @@
 import { useForm } from "@tanstack/react-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -27,6 +28,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { authClient } from "@/features/auth/auth-client";
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -48,8 +50,13 @@ export function ResetPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -59,12 +66,34 @@ export function ResetPasswordForm({
     validators: {
       onSubmit: resetPasswordSchema,
     },
-    onSubmit: () => {
-      toast.success("Password reset successful!", {
-        description:
-          "Your password has been reset. You can now log in with your new password.",
-      });
-      // TODO: Implement actual password reset logic with token
+    onSubmit: async ({ value }) => {
+      if (!token) {
+        toast.error("Invalid or expired reset link");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const result = await authClient.resetPassword({
+          newPassword: value.password,
+          token,
+        });
+
+        if (result.error) {
+          toast.error(result.error.message || "Failed to reset password");
+          return;
+        }
+
+        toast.success("Password reset successful! You can now log in");
+
+        router.push("/auth/login");
+      } catch (error) {
+        // biome-ignore lint/suspicious/noConsole: error logging for debugging
+        console.error("Reset password error:", error);
+        toast.error("Failed to reset password");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
@@ -174,7 +203,9 @@ export function ResetPasswordForm({
               </form.Field>
 
               <Field>
-                <Button type="submit">Reset Password</Button>
+                <Button disabled={isSubmitting || !token} type="submit">
+                  {isSubmitting ? "Resetting..." : "Reset Password"}
+                </Button>
                 <FieldDescription className="text-center">
                   Remember your password?{" "}
                   <Link className="underline" href="/auth/login">

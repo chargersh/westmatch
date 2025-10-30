@@ -3,9 +3,11 @@
 import { useForm } from "@tanstack/react-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 8;
+const API_ERROR_REGEX = /Uncaught APIError: (.+)/;
 
 const signupSchema = z
   .object({
@@ -56,8 +59,10 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -69,20 +74,30 @@ export function SignupForm({
     validators: {
       onSubmit: signupSchema,
     },
-    onSubmit: ({ value }) => {
-      toast("You submitted the following values:", {
-        description: (
-          <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-background p-4 text-code-foreground">
-            <code>{JSON.stringify(value, null, 2)}</code>
-          </pre>
-        ),
-        classNames: {
-          content: "flex flex-col gap-2",
-        },
-        style: {
-          "--border-radius": "calc(var(--radius)  + 4px)",
-        } as React.CSSProperties,
-      });
+    onSubmit: async ({ value }) => {
+      setIsSubmitting(true);
+      try {
+        await signUp({
+          email: value.email,
+          password: value.password,
+          name: value.name,
+        });
+
+        toast.success("Account created! You can now log in");
+
+        router.push("/auth/login");
+      } catch (error) {
+        // biome-ignore lint/suspicious/noConsole: error logging for debugging
+        console.error("Signup error:", error);
+        let message = "Failed to create account";
+        if (error instanceof Error) {
+          const match = error.message.match(API_ERROR_REGEX);
+          message = match?.[1] ?? error.message;
+        }
+        toast.error(message);
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
@@ -250,7 +265,9 @@ export function SignupForm({
               </form.Field>
 
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Creating account..." : "Create Account"}
+                </Button>
                 <FieldDescription className="text-center">
                   Already have an account?{" "}
                   <Link className="underline" href="/auth/login">
