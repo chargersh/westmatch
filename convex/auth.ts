@@ -116,11 +116,37 @@ function createAuth(
 
 export { createAuth };
 
-// Example function for getting the current user
-// Feel free to edit, omit, etc.
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => authComponent.getAuthUser(ctx),
+  handler: async (ctx) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+    if (!authUser) {
+      return null;
+    }
+
+    const userId = authUser.userId;
+    if (!userId) {
+      return null;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      userId: user.userId,
+      username: user.username,
+      name: user.name,
+      displayUsername: user.displayUsername,
+      email: user.email,
+      image: user.image,
+    };
+  },
 });
 
 export const signUp = action({
