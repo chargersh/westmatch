@@ -93,7 +93,11 @@ export function SignupForm({
       } catch (error) {
         // biome-ignore lint/suspicious/noConsole: error logging for debugging
         console.error("Signup error:", error);
-        toast.error("An unexpected error occurred");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        toast.error("An unexpected error occurred", {
+          description: errorMessage,
+        });
       } finally {
         setIsSubmitting(false);
       }
