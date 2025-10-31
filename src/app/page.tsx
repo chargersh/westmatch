@@ -1,4 +1,5 @@
 import { ThemeToggler } from "@/components/theme-toggler";
+import { LoginButton } from "@/features/auth/login-button";
 import { InstallPrompt } from "@/features/pwa/install-prompt";
 import { PushNotificationButton } from "@/features/pwa/push-notification-button";
 import { SendTestNotificationButton } from "@/features/pwa/send-test-notification-button";
@@ -6,7 +7,8 @@ import { SendTestNotificationButton } from "@/features/pwa/send-test-notificatio
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-white p-8 dark:bg-black">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-4">
+        <LoginButton />
         <ThemeToggler />
       </div>
 
