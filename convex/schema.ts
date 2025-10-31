@@ -19,4 +19,16 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
+  push_subscriptions: defineTable({
+    userId: v.string(),
+    subscription: v.object({
+      endpoint: v.string(),
+      keys: v.object({
+        p256dh: v.string(),
+        auth: v.string(),
+      }),
+      expirationTime: v.optional(v.null()),
+    }),
+    createdAt: v.number(),
+  }).index("by_userId", ["userId"]),
 });

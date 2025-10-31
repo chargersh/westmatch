@@ -18,6 +18,11 @@ if (!siteUrlEnv) {
 }
 const siteUrl: string = siteUrlEnv;
 
+const trustedOrigins = [siteUrl];
+if (siteUrl === "http://localhost:3000") {
+  trustedOrigins.push("https://localhost:3000");
+}
+
 const authFunctions: AuthFunctions = internal.auth;
 
 export const authComponent = createClient<DataModel>(components.betterAuth, {
@@ -88,7 +93,7 @@ function createAuth(
       disabled: optionsOnly,
     },
     baseURL: siteUrl,
-    trustedOrigins: [siteUrl],
+    trustedOrigins,
     database: authComponent.adapter(ctx),
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
