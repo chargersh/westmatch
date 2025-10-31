@@ -1,0 +1,6 @@
+- [x] Icon files
+- [x] Action for sending notification. Generic for now
+- [ ] Show Not supported button instead of not rendering
+- [ ] Add ARIA and a11y to push notification button
+- [ ] Some button for sending push notifications (test, will be deleted), using the defined action
+- [ ] In service worker sw.js access the SITE_URL and in `event.waitUntil(clients.openWindow` do the SITE_URL

@@ -1,6 +1,7 @@
 import { ThemeToggler } from "@/components/theme-toggler";
 import { InstallPrompt } from "@/features/pwa/install-prompt";
 import { PushNotificationButton } from "@/features/pwa/push-notification-button";
+import { SendTestNotificationButton } from "@/features/pwa/send-test-notification-button";
 
 export default function Home() {
   return (
@@ -12,12 +13,15 @@ export default function Home() {
       <h1 className="font-bold text-3xl">WestMatch</h1>
 
       <div className="flex flex-col gap-4">
-        <div className="rounded border p-2">
+        <div className="rounded border p-4">
           <h2 className="mb-4 font-semibold">Push Notifications</h2>
-          <PushNotificationButton />
+          <div className="flex flex-col gap-2">
+            <PushNotificationButton />
+            <SendTestNotificationButton />
+          </div>
         </div>
 
-        <div className="rounded border p-2">
+        <div className="rounded border p-4">
           <InstallPrompt />
         </div>
       </div>

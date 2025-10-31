@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { internalQuery, mutation } from "./_generated/server";
 import { authComponent } from "./auth";
 
@@ -72,4 +73,26 @@ export const getSubscriptionForUser = internalQuery({
       .query("push_subscriptions")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first(),
+});
+
+export const sendTestNotification = mutation({
+  args: {
+    title: v.string(),
+    message: v.string(),
+  },
+  handler: async (ctx, { title, message }) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+
+    if (!authUser) {
+      throw new Error("User not authenticated");
+    }
+
+    await ctx.scheduler.runAfter(0, internal.actions.sendNotification, {
+      userId: authUser._id,
+      title,
+      message,
+    });
+
+    return { success: true, message: "Test notification scheduled" };
+  },
 });

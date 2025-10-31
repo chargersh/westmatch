@@ -75,11 +75,10 @@ export function PushNotificationButton() {
     await unsubscribeFromPushNotifications();
   }
 
-  if (!isSupported) {
-    return null;
-  }
-
   const getButtonText = () => {
+    if (!isSupported) {
+      return "Not Supported";
+    }
     if (isLoading) {
       return "Loading...";
     }
@@ -90,7 +89,7 @@ export function PushNotificationButton() {
   };
 
   return (
-    <Button disabled={isLoading} onClick={handleToggle}>
+    <Button disabled={isLoading || !isSupported} onClick={handleToggle}>
       {getButtonText()}
     </Button>
   );
