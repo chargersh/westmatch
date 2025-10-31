@@ -43,7 +43,7 @@ export const sendNotification = internalAction({
         JSON.stringify({
           title,
           body: message,
-          icon: "/icon.png",
+          icon: "/favicon/icon.png",
         })
       );
       return { success: true };

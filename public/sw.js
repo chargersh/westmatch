@@ -1,8 +1,8 @@
 const VIBRATION_STRONG = 100;
 const VIBRATION_PAUSE = 50;
 const VIBRATION_PATTERN = [VIBRATION_STRONG, VIBRATION_PAUSE, VIBRATION_STRONG];
-const DEFAULT_ICON = "/icon.png";
-const DEFAULT_BADGE = "/badge.png";
+const DEFAULT_ICON = "/favicon/icon.png";
+const DEFAULT_BADGE = "/favicon/badge.png";
 const PRIMARY_KEY = "2";
 
 self.addEventListener("push", (event) => {
@@ -24,5 +24,5 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow("https://westmatch.local"));
+  event.waitUntil(clients.openWindow("/"));
 });
