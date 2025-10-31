@@ -124,7 +124,7 @@ export const getCurrentUser = query({
       return null;
     }
 
-    const userId = authUser.userId;
+    const userId = authUser._id;
     if (!userId) {
       return null;
     }
