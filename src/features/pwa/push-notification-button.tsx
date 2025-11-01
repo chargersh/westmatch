@@ -3,6 +3,7 @@
 import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { urlBase64ToUint8Array } from "./utils";
 
@@ -58,11 +59,11 @@ export function PushNotificationButton() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-    setIsSubscribed(true);
     const serializedSub = JSON.parse(JSON.stringify(sub));
     await subscribeToPushNotifications({
       subscription: serializedSub,
     });
+    setIsSubscribed(true);
   }
 
   async function handleUnsubscribe() {
@@ -70,17 +71,24 @@ export function PushNotificationButton() {
     const sub = await registration.pushManager.getSubscription();
     if (sub) {
       await sub.unsubscribe();
+      await unsubscribeFromPushNotifications({
+        endpoint: sub.endpoint,
+      });
     }
     setIsSubscribed(false);
-    await unsubscribeFromPushNotifications();
   }
 
-  const getButtonText = () => {
+  const getButtonContent = () => {
+    if (isLoading) {
+      return (
+        <>
+          <Spinner />
+          {isSubscribed ? "Disabling..." : "Enabling..."}
+        </>
+      );
+    }
     if (!isSupported) {
       return "Not Supported";
-    }
-    if (isLoading) {
-      return "Loading...";
     }
     if (isSubscribed) {
       return "Disable Notifications";
@@ -90,7 +98,7 @@ export function PushNotificationButton() {
 
   return (
     <Button disabled={isLoading || !isSupported} onClick={handleToggle}>
-      {getButtonText()}
+      {getButtonContent()}
     </Button>
   );
 }

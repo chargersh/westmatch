@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalQuery, mutation } from "./_generated/server";
+import { internalMutation, internalQuery, mutation } from "./_generated/server";
 import { authComponent } from "./auth";
 
 export const subscribeToPushNotifications = mutation({
@@ -21,13 +21,17 @@ export const subscribeToPushNotifications = mutation({
       throw new Error("User not authenticated");
     }
 
-    const existingSub = await ctx.db
+    const existingSubs = await ctx.db
       .query("push_subscriptions")
       .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
-      .first();
+      .collect();
 
-    if (existingSub) {
-      await ctx.db.patch(existingSub._id, {
+    const sameEndpoint = existingSubs.find(
+      (sub) => sub.subscription.endpoint === subscription.endpoint
+    );
+
+    if (sameEndpoint) {
+      await ctx.db.patch(sameEndpoint._id, {
         subscription,
         createdAt: Date.now(),
       });
@@ -45,21 +49,27 @@ export const subscribeToPushNotifications = mutation({
 });
 
 export const unsubscribeFromPushNotifications = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    endpoint: v.string(),
+  },
+  handler: async (ctx, { endpoint }) => {
     const authUser = await authComponent.safeGetAuthUser(ctx);
 
     if (!authUser) {
       throw new Error("User not authenticated");
     }
 
-    const sub = await ctx.db
+    const subs = await ctx.db
       .query("push_subscriptions")
       .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
-      .first();
+      .collect();
 
-    if (sub) {
-      await ctx.db.delete(sub._id);
+    const sameEndpoint = subs.find(
+      (sub) => sub.subscription.endpoint === endpoint
+    );
+
+    if (sameEndpoint) {
+      await ctx.db.delete(sameEndpoint._id);
     }
 
     return { success: true, message: "Unsubscribed" };
@@ -73,6 +83,15 @@ export const getSubscriptionForUser = internalQuery({
       .query("push_subscriptions")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first(),
+});
+
+export const getAllSubscriptionsForUser = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) =>
+    await ctx.db
+      .query("push_subscriptions")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect(),
 });
 
 export const sendTestNotification = mutation({
@@ -94,5 +113,17 @@ export const sendTestNotification = mutation({
     });
 
     return { success: true, message: "Test notification scheduled" };
+  },
+});
+
+export const deleteSubscriptionsByIds = internalMutation({
+  args: {
+    ids: v.array(v.id("push_subscriptions")),
+  },
+  handler: async (ctx, { ids }) => {
+    for (const id of ids) {
+      await ctx.db.delete(id);
+    }
+    return { success: true, deleted: ids.length };
   },
 });
