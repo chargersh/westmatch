@@ -28,7 +28,8 @@ export function ResetNotificationsButton() {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(
           registrations.map(async (registration) => {
-            const subscription = await registration.pushManager.getSubscription();
+            const subscription =
+              await registration.pushManager.getSubscription();
             if (subscription) {
               await subscription.unsubscribe();
             }
@@ -39,7 +40,9 @@ export function ResetNotificationsButton() {
 
       if (typeof window !== "undefined" && "caches" in window) {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+        await Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
       }
     } finally {
       setIsLoading(false);
@@ -47,7 +50,11 @@ export function ResetNotificationsButton() {
   }
 
   return (
-    <Button disabled={!isSupported || isLoading} onClick={handleReset} variant="destructive">
+    <Button
+      disabled={!isSupported || isLoading}
+      onClick={handleReset}
+      variant="destructive"
+    >
       {isLoading ? "Resetting..." : "Reset Notifications"}
     </Button>
   );

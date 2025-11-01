@@ -5,6 +5,19 @@ import webpush from "web-push";
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
 
+// Set VAPID details once at module level (like the working project)
+if (
+  !(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
+) {
+  throw new Error("VAPID keys not configured");
+}
+
+webpush.setVapidDetails(
+  "mailto:notifications@westmatch.vercel.app",
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
 export const sendNotification = internalAction({
   args: {
     userId: v.string(),
@@ -12,20 +25,6 @@ export const sendNotification = internalAction({
     message: v.string(),
   },
   handler: async (ctx, { userId, title, message }) => {
-    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
-      throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY not configured");
-    }
-
-    if (!process.env.VAPID_PRIVATE_KEY) {
-      throw new Error("VAPID_PRIVATE_KEY not configured");
-    }
-
-    webpush.setVapidDetails(
-      "mailto:notifications@westmatch.vercel.app",
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-
     const subscription = await ctx.runQuery(
       internal.notifications.getSubscriptionForUser,
       {
