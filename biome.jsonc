@@ -11,7 +11,9 @@
       "**",
       "!bun.lock",
       "!**/convex/tsconfig.json",
-      "!**/convex/_generated"
+      "!**/convex/_generated",
+      "!src/features/pwa/utils.ts",
+      "!public/sw.js"
     ]
   },
   "linter": {
