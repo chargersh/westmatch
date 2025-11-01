@@ -21,7 +21,7 @@ export const sendNotification = internalAction({
     }
 
     webpush.setVapidDetails(
-      "mailto:notifications@westmatch.local",
+      "mailto:notifications@westmatch.vercel.app",
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY
     );
