@@ -2,6 +2,7 @@ import { ThemeToggler } from "@/components/theme-toggler";
 import { LoginButton } from "@/features/auth/login-button";
 import { InstallPrompt } from "@/features/pwa/install-prompt";
 import { PushNotificationButton } from "@/features/pwa/push-notification-button";
+import { ResetNotificationsButton } from "@/features/pwa/reset-notifications-button";
 import { SendTestNotificationButton } from "@/features/pwa/send-test-notification-button";
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
           <div className="flex flex-col gap-2">
             <PushNotificationButton />
             <SendTestNotificationButton />
+            <ResetNotificationsButton />
           </div>
         </div>
 
