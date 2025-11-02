@@ -31,11 +31,13 @@ WestMatch is a mobile-first PWA that enables WIUT students to:
 ## Key Features
 
 ### Authentication & Verification
+
 - Email/password authentication
 - **Email domain restriction:** Only `@students.wiut.uz` emails allowed
 - Email verification required before accessing the app
 
 ### Profile System
+
 - Multiple profile photos (up to 6)
 - Bio (500 character limit)
 - Major/field of study
@@ -44,6 +46,7 @@ WestMatch is a mobile-first PWA that enables WIUT students to:
 - Age (18-30 range for university students)
 
 ### Swipe & Match
+
 - Tinder-style swipe interface
   - Swipe right = Like
   - Swipe left = Pass
@@ -55,6 +58,7 @@ WestMatch is a mobile-first PWA that enables WIUT students to:
 - Match notifications
 
 ### Real-Time Chat
+
 - Direct messaging with matches only
 - Real-time message delivery
 - Read receipts
@@ -62,6 +66,7 @@ WestMatch is a mobile-first PWA that enables WIUT students to:
 - Unmatch option
 
 ### Discovery Filters (Future)
+
 - Filter by graduation year
 - Filter by major/faculty
 - Age range preferences
@@ -111,54 +116,10 @@ westmatch/
 └── public/              → Static assets (PWA icons, manifest)
 ```
 
-## Database Schema (Convex)
-
-### Core Tables
-
-**users**
-- `_id` - Convex ID
-- `email` - students.wiut.uz email
-- `emailVerified` - boolean
-- `createdAt` - timestamp
-
-**profiles**
-- `_id` - Convex ID
-- `userId` - ref to users
-- `name` - string
-- `age` - number (18-30)
-- `bio` - string (max 500 chars)
-- `major` - string
-- `graduationYear` - number
-- `photos` - array of Convex file IDs (max 6)
-- `interests` - array of strings
-- `isActive` - boolean (profile visibility)
-
-**swipes**
-- `_id` - Convex ID
-- `swiperId` - ref to users (person who swiped)
-- `swipedId` - ref to users (person being swiped on)
-- `liked` - boolean (true = right swipe, false = left swipe)
-- `timestamp` - timestamp
-
-**matches**
-- `_id` - Convex ID
-- `user1Id` - ref to users
-- `user2Id` - ref to users
-- `matchedAt` - timestamp
-- `lastMessageAt` - timestamp (for sorting)
-- `isActive` - boolean (false if unmatched)
-
-**messages**
-- `_id` - Convex ID
-- `matchId` - ref to matches
-- `senderId` - ref to users
-- `text` - string
-- `sentAt` - timestamp
-- `read` - boolean
-
 ## User Flows
 
 ### 1. Sign Up & Onboarding
+
 1. Enter email (`@students.wiut.uz` only) and password
 2. Verify email via code/link
 3. Create profile:
@@ -170,6 +131,7 @@ westmatch/
 4. Start swiping!
 
 ### 2. Swiping
+
 1. See profile card (main photo, name, age, major, year)
 2. Swipe right to like, left to pass
 3. Tap card to see full profile (all photos, bio, interests)
@@ -177,6 +139,7 @@ westmatch/
 5. Continue swiping through profiles
 
 ### 3. Matching & Chatting
+
 1. Get match notification when mutual like happens
 2. Go to matches tab
 3. See list of matches sorted by recent activity
@@ -187,6 +150,7 @@ westmatch/
 ## Development Roadmap
 
 ### Phase 1: MVP (2 weeks)
+
 - [x] Project setup (Next.js, Convex, Biome, PWA basics)
 - [x] Dark mode support
 - [ ] Convex schema setup
@@ -198,6 +162,7 @@ westmatch/
 - [ ] Basic chat (real-time messaging)
 
 ### Phase 2: Polish (1 week)
+
 - [ ] Profile editing
 - [ ] Match list with last message preview
 - [ ] Proper PWA icons and splash screens
@@ -206,6 +171,7 @@ westmatch/
 - [ ] Deploy to production
 
 ### Phase 3: Enhancements (Future)
+
 - [ ] Push notifications for matches and messages
 - [ ] Discovery filters (year, major, age)
 - [ ] "Undo" last swipe (premium feature?)
@@ -217,6 +183,7 @@ westmatch/
 ## Technical Decisions
 
 ### Why Convex?
+
 - Real-time subscriptions (perfect for chat)
 - Built-in file storage (for profile photos)
 - No API routes needed (serverless functions)
@@ -224,17 +191,20 @@ westmatch/
 - Great TypeScript support
 
 ### Why Better-Auth?
+
 - Full control over auth flow
 - Easy email verification
 - Works seamlessly with Convex
 - Can add social login later if needed
 
 ### Why Bun?
+
 - Fastest package manager
 - Drop-in replacement for npm/yarn
 - Great for rapid development
 
 ### Why Biome over ESLint/Prettier?
+
 - Much faster (written in Rust)
 - Single tool for linting + formatting
 - Better error messages
