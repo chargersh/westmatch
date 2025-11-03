@@ -141,6 +141,11 @@ export const getDiscoveryProfiles = query({
           return false;
         }
 
+        // Require the candidate's gender to match my preference
+        if (profile.gender !== myProfile.interestedIn) {
+          return false;
+        }
+
         // Skip if already liked or passed
         if (interactedUserIds.has(profile.userId)) {
           return false;
