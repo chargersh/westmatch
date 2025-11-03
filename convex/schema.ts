@@ -45,13 +45,15 @@ export default defineSchema({
     drinking: v.optional(v.string()),
     smoking: v.optional(v.string()),
     profileComplete: v.boolean(),
+    isActive: v.boolean(),
     updatedAt: v.number(),
   })
     .index("by_userId", ["userId"])
     .index("by_interestedIn", ["interestedIn"])
-    .index("by_interestedIn_and_profileComplete", [
+    .index("by_interestedIn_profileComplete_isActive", [
       "interestedIn",
       "profileComplete",
+      "isActive",
     ]),
 
   profilePhotos: defineTable({
@@ -62,7 +64,7 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_profileId_orderIndex", ["profileId", "orderIndex"])
-    .index("by_id", ["id"]),
+    .index("by_custom_id", ["id"]),
 
   profilePrompts: defineTable({
     id: v.string(),
@@ -73,7 +75,7 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_profileId_orderIndex", ["profileId", "orderIndex"])
-    .index("by_id", ["id"]),
+    .index("by_custom_id", ["id"]),
 
   likes: defineTable({
     fromUserId: v.string(),
@@ -94,7 +96,7 @@ export default defineSchema({
     user1Id: v.string(),
     user2Id: v.string(),
     initiatingLikeId: v.id("likes"),
-    active: v.boolean(),
+    isActive: v.boolean(),
     lastMessageAt: v.optional(v.number()),
     lastMessageSenderId: v.optional(v.string()),
     lastMessagePreview: v.optional(v.string()),

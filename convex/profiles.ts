@@ -1,9 +1,7 @@
-import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { stream } from "convex-helpers/server/stream";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import schema from "./schema";
+import { getProfileContent } from "./helpers";
 
 export const getMyProfile = query({
   args: {},
@@ -23,185 +21,12 @@ export const getMyProfile = query({
       return null;
     }
 
-    const photos = await ctx.db
-      .query("profilePhotos")
-      .withIndex("by_profileId_orderIndex", (q) =>
-        q.eq("profileId", profile._id)
-      )
-      .filter((q) => q.eq(q.field("deletedAt"), undefined))
-      .collect();
-
-    const prompts = await ctx.db
-      .query("profilePrompts")
-      .withIndex("by_profileId_orderIndex", (q) =>
-        q.eq("profileId", profile._id)
-      )
-      .filter((q) => q.eq(q.field("deletedAt"), undefined))
-      .collect();
+    const { photos, prompts } = await getProfileContent(ctx, profile._id);
 
     return {
       ...profile,
       photos,
       prompts,
-    };
-  },
-});
-
-export const getProfileById = query({
-  args: {
-    profileId: v.id("profiles"),
-  },
-  handler: async (ctx, args) => {
-    const authUser = await authComponent.safeGetAuthUser(ctx);
-
-    if (!authUser) {
-      throw new Error("User not authenticated");
-    }
-
-    const profile = await ctx.db.get(args.profileId);
-
-    if (!profile) {
-      return null;
-    }
-
-    const photos = await ctx.db
-      .query("profilePhotos")
-      .withIndex("by_profileId_orderIndex", (q) =>
-        q.eq("profileId", profile._id)
-      )
-      .filter((q) => q.eq(q.field("deletedAt"), undefined))
-      .collect();
-
-    const prompts = await ctx.db
-      .query("profilePrompts")
-      .withIndex("by_profileId_orderIndex", (q) =>
-        q.eq("profileId", profile._id)
-      )
-      .filter((q) => q.eq(q.field("deletedAt"), undefined))
-      .collect();
-
-    return {
-      ...profile,
-      photos,
-      prompts,
-    };
-  },
-});
-
-export const getDiscoveryProfiles = query({
-  args: { paginationOpts: paginationOptsValidator },
-  handler: async (ctx, args) => {
-    const authUser = await authComponent.safeGetAuthUser(ctx);
-
-    if (!authUser) {
-      throw new Error("User not authenticated");
-    }
-
-    // Get current user's profile
-    const myProfile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
-      .first();
-
-    if (!myProfile) {
-      throw new Error("Profile not found");
-    }
-
-    // Get users I've already liked or passed
-    const myLikes = await ctx.db
-      .query("likes")
-      .withIndex("by_fromUserId_and_toUserId", (q) =>
-        q.eq("fromUserId", authUser._id)
-      )
-      .collect();
-
-    const myPasses = await ctx.db
-      .query("passes")
-      .withIndex("by_fromUserId_and_toUserId", (q) =>
-        q.eq("fromUserId", authUser._id)
-      )
-      .collect();
-
-    const interactedUserIds = new Set([
-      ...myLikes.map((like) => like.toUserId),
-      ...myPasses.map((pass) => pass.toUserId),
-    ]);
-
-    // Create a stream with filtering
-    const candidatesStream = stream(ctx.db, schema)
-      .query("profiles")
-      .withIndex("by_interestedIn_and_profileComplete", (q) =>
-        q.eq("interestedIn", myProfile.gender).eq("profileComplete", true)
-      )
-      .order("desc")
-      // biome-ignore lint/suspicious/useAwait: filterWith requires async function signature
-      .filterWith(async (profile) => {
-        // Exclude self
-        if (profile.userId === authUser._id) {
-          return false;
-        }
-
-        // Require the candidate's gender to match my preference
-        if (profile.gender !== myProfile.interestedIn) {
-          return false;
-        }
-
-        // Skip if already liked or passed
-        if (interactedUserIds.has(profile.userId)) {
-          return false;
-        }
-
-        // Check if my year matches their preferredYears
-        if (profile.preferredYears && !profile.preferredYears[myProfile.year]) {
-          return false;
-        }
-
-        // Check mutual compatibility: does my preferredYears include their year?
-        if (
-          myProfile.preferredYears &&
-          !myProfile.preferredYears[profile.year]
-        ) {
-          return false;
-        }
-
-        return true;
-      });
-
-    // Paginate the filtered stream
-    const paginatedCandidates = await candidatesStream.paginate(
-      args.paginationOpts
-    );
-
-    // Get photos and prompts for the page
-    const profilesWithContent = await Promise.all(
-      paginatedCandidates.page.map(async (profile) => {
-        const photos = await ctx.db
-          .query("profilePhotos")
-          .withIndex("by_profileId_orderIndex", (q) =>
-            q.eq("profileId", profile._id)
-          )
-          .filter((q) => q.eq(q.field("deletedAt"), undefined))
-          .collect();
-
-        const prompts = await ctx.db
-          .query("profilePrompts")
-          .withIndex("by_profileId_orderIndex", (q) =>
-            q.eq("profileId", profile._id)
-          )
-          .filter((q) => q.eq(q.field("deletedAt"), undefined))
-          .collect();
-
-        return {
-          ...profile,
-          photos,
-          prompts,
-        };
-      })
-    );
-
-    return {
-      ...paginatedCandidates,
-      page: profilesWithContent,
     };
   },
 });
@@ -252,8 +77,71 @@ export const createProfile = mutation({
       major: args.major,
       preferredYears: args.preferredYears,
       profileComplete: false,
+      isActive: true,
       updatedAt: Date.now(),
     });
+  },
+});
+
+export const deactivateProfile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+
+    if (!authUser) {
+      throw new Error("User not authenticated");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .first();
+
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (!profile.isActive) {
+      return { message: "Profile already inactive", isActive: false };
+    }
+
+    await ctx.db.patch(profile._id, {
+      isActive: false,
+      updatedAt: Date.now(),
+    });
+
+    return { message: "Profile deactivated", isActive: false };
+  },
+});
+
+export const activateProfile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+
+    if (!authUser) {
+      throw new Error("User not authenticated");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .first();
+
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.isActive) {
+      return { message: "Profile already active", isActive: true };
+    }
+
+    await ctx.db.patch(profile._id, {
+      isActive: true,
+      updatedAt: Date.now(),
+    });
+
+    return { message: "Profile activated", isActive: true };
   },
 });
 

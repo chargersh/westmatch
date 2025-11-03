@@ -115,4 +115,59 @@ profiles: defineTable({
 - Gamification = more user retention
 - Social proof (users want to increase their ranking)
 
-**Implementation details:** TBD (cron jobs, real-time updates on actions, decay over time, etc.), needs more research how Hinge/Tinder does this.
+**Implementation details:** TBD (cron jobs, real-time updates on actions, decay over time, etc.)
+
+---
+
+## File Structure & Organization
+
+Organize by **feature/domain** rather than by data model to keep files focused and maintainable:
+
+```
+convex/
+├── auth.ts                   # Authentication logic
+├── schema.ts                 # Database schema definitions
+├── helpers.ts                # Reusable helper functions
+│   ├── getProfilePhotos      # Fetch photos for a profile (excludes soft-deleted)
+│   ├── getProfilePrompts     # Fetch prompts for a profile (excludes soft-deleted)
+│   └── getProfileContent     # Fetch both photos and prompts in parallel
+│
+├── profiles.ts               # Profile CRUD (own profile management)
+│   ├── createProfile         # Create initial profile during onboarding (sets isActive: true)
+│   ├── updateProfile         # Edit profile fields, auto-checks profileComplete
+│   ├── getMyProfile          # Get current user's profile
+│   ├── deactivateProfile     # Pause profile (remove from discovery, sets isActive: false)
+│   └── activateProfile       # Reactivate profile (sets isActive: true)
+│
+├── discovery.ts              # Discovery/swiping
+│   └── getDiscoveryProfiles  # Paginated profiles for swiping (filters by interestedIn, profileComplete, isActive)
+│
+├── likes.ts                  # Like/pass interactions
+│   ├── likeProfile           # Like a profile, check for mutual match
+│   ├── passProfile           # Pass on a profile
+│   └── getProfilesWhoLikedMe # View who liked me (paginated)
+│
+├── matches.ts                # Match management
+│   ├── getMyMatches          # List all active matches (paginated)
+│   ├── getMatchedProfile     # View full profile of a matched user
+│   ├── unmatch               # End a match
+│   └── getConversation       # Match + last message + unread count
+│
+├── messages.ts               # Messaging between matches
+│   ├── sendMessage           # Send message to match
+│   ├── getMessages           # Get paginated full chat history
+│   └── markMessagesAsRead    # Batch mark unread messages as read
+│
+├── photos.ts                 # Photo management
+│   ├── uploadPhoto           # Store photo with R2 key + orderIndex, auto-checks profileComplete
+│   ├── deletePhoto           # Soft delete (set deletedAt), auto-checks profileComplete
+│   └── reorderPhotos         # Batch update orderIndex (for drag-and-drop)
+│
+├── prompts.ts                # Prompt answers management
+│   ├── addPrompt             # Add prompt answer with orderIndex, auto-checks profileComplete
+│   ├── updatePrompt          # Edit prompt answer text
+│   ├── deletePrompt          # Soft delete (set deletedAt), auto-checks profileComplete
+│   └── reorderPrompts        # Batch update orderIndex (for drag-and-drop)
+│
+└── notifications.ts          # Push notifications (already exists)
+```
