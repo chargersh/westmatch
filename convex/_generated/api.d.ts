@@ -10,11 +10,14 @@
 
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
+import type * as discovery from "../discovery.js";
 import type * as email from "../email.js";
 import type * as emails_reset_password_email from "../emails/reset_password_email.js";
 import type * as emails_verification_email from "../emails/verification_email.js";
+import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as notifications from "../notifications.js";
+import type * as profiles from "../profiles.js";
 
 import type {
   ApiFromModules,
@@ -33,11 +36,14 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
+  discovery: typeof discovery;
   email: typeof email;
   "emails/reset_password_email": typeof emails_reset_password_email;
   "emails/verification_email": typeof emails_verification_email;
+  helpers: typeof helpers;
   http: typeof http;
   notifications: typeof notifications;
+  profiles: typeof profiles;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
