@@ -25,6 +25,16 @@ export const addPrompt = mutation({
       throw new Error("Profile not found");
     }
 
+    // Check for duplicate ID
+    const existingPromptById = await ctx.db
+      .query("profilePrompts")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.id))
+      .first();
+
+    if (existingPromptById) {
+      throw new Error("Prompt with this ID already exists");
+    }
+
     if (!PROMPT_IDS.includes(args.promptId as PromptId)) {
       throw new Error("Invalid prompt ID");
     }
@@ -194,28 +204,32 @@ export const reorderPrompts = mutation({
       throw new Error("Too many prompts provided");
     }
 
-    const prompts = await Promise.all(
-      args.promptAnswerIds.map(async (id) => {
-        const prompt = await ctx.db
-          .query("profilePrompts")
-          .withIndex("by_custom_id", (q) => q.eq("id", id))
-          .first();
+    // Fetch all non-deleted prompts once
+    const allPrompts = await ctx.db
+      .query("profilePrompts")
+      .withIndex("by_profileId_orderIndex", (q) =>
+        q.eq("profileId", profile._id)
+      )
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
 
-        if (!prompt) {
-          throw new Error(`Prompt answer ${id} not found`);
-        }
+    // Ensure all non-deleted prompts are included in the reorder
+    if (args.promptAnswerIds.length !== allPrompts.length) {
+      throw new Error(
+        `Must provide all ${allPrompts.length} non-deleted prompts for reordering`
+      );
+    }
 
-        if (prompt.profileId !== profile._id) {
-          throw new Error("Not authorized to reorder these prompts");
-        }
+    // Map prompts in the order provided by the client
+    const prompts = args.promptAnswerIds.map((id) => {
+      const prompt = allPrompts.find((p) => p.id === id);
 
-        if (prompt.deletedAt) {
-          throw new Error("Cannot reorder deleted prompts");
-        }
+      if (!prompt) {
+        throw new Error(`Prompt answer ${id} not found`);
+      }
 
-        return prompt;
-      })
-    );
+      return prompt;
+    });
 
     await Promise.all(
       prompts.map((prompt, index) =>

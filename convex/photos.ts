@@ -25,6 +25,16 @@ export const addPhoto = mutation({
       throw new Error("Profile not found");
     }
 
+    // Check for duplicate ID
+    const existingPhotoById = await ctx.db
+      .query("profilePhotos")
+      .withIndex("by_custom_id", (q) => q.eq("id", args.id))
+      .first();
+
+    if (existingPhotoById) {
+      throw new Error("Photo with this ID already exists");
+    }
+
     const existingPhotos = await ctx.db
       .query("profilePhotos")
       .withIndex("by_profileId_orderIndex", (q) =>
@@ -131,28 +141,32 @@ export const reorderPhotos = mutation({
       throw new Error("Too many photos provided");
     }
 
-    const photos = await Promise.all(
-      args.photoIds.map(async (id) => {
-        const photo = await ctx.db
-          .query("profilePhotos")
-          .withIndex("by_custom_id", (q) => q.eq("id", id))
-          .first();
+    // Fetch all non-deleted photos once
+    const allPhotos = await ctx.db
+      .query("profilePhotos")
+      .withIndex("by_profileId_orderIndex", (q) =>
+        q.eq("profileId", profile._id)
+      )
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
+      .collect();
 
-        if (!photo) {
-          throw new Error(`Photo ${id} not found`);
-        }
+    // Ensure all non-deleted photos are included in the reorder
+    if (args.photoIds.length !== allPhotos.length) {
+      throw new Error(
+        `Must provide all ${allPhotos.length} non-deleted photos for reordering`
+      );
+    }
 
-        if (photo.profileId !== profile._id) {
-          throw new Error("Not authorized to reorder these photos");
-        }
+    // Map photos in the order provided by the client
+    const photos = args.photoIds.map((id) => {
+      const photo = allPhotos.find((p) => p.id === id);
 
-        if (photo.deletedAt) {
-          throw new Error("Cannot reorder deleted photos");
-        }
+      if (!photo) {
+        throw new Error(`Photo ${id} not found`);
+      }
 
-        return photo;
-      })
-    );
+      return photo;
+    });
 
     await Promise.all(
       photos.map((photo, index) =>
