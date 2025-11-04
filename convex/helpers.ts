@@ -66,10 +66,6 @@ export async function checkAndUpdateProfileComplete(
     promptCount?: number;
   }
 ) {
-  if (profile.profileComplete) {
-    return; // Already complete, skip check
-  }
-
   // Count only what wasn't provided
   const photoCount =
     options.photoCount ??
@@ -105,7 +101,11 @@ export async function checkAndUpdateProfileComplete(
       profile.major
   );
 
-  if (hasMinPhotos && hasRequiredPrompts && hasRequiredFields) {
-    await ctx.db.patch(profile._id, { profileComplete: true });
+  const shouldBeComplete =
+    hasMinPhotos && hasRequiredPrompts && hasRequiredFields;
+
+  // Only patch if status changed (handles both directions: false→true and true→false)
+  if (profile.profileComplete !== shouldBeComplete) {
+    await ctx.db.patch(profile._id, { profileComplete: shouldBeComplete });
   }
 }
