@@ -55,7 +55,8 @@ export async function getProfileContent(
 
 /**
  * Check if profile meets completion requirements and update profileComplete flag if needed.
- * Only runs if profile is not already marked complete.
+ * Handles both directions: marking complete when requirements are met, and marking
+ * incomplete when requirements are no longer met (e.g., user deletes photos/prompts).
  * Optimized to only fetch what wasn't already counted by the caller.
  */
 export async function checkAndUpdateProfileComplete(
