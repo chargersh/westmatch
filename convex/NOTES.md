@@ -1,5 +1,96 @@
 # Development Notes & Future Ideas
 
+## Why Custom `id` Field Instead of Using `_id`?
+
+We use a custom `id` field (string) in `profilePhotos` and `profilePrompts` instead of relying on Convex's auto-generated `_id` for two critical reasons:
+
+### 1. Stable References Across Soft Deletes
+
+When a user deletes a photo or prompt, we soft-delete it by setting `deletedAt` instead of hard-deleting the record. This is important because:
+
+- **Likes reference content:** The `likes` table has a `contentReference` field that stores the `id` of the liked photo or prompt
+- **Chat history preservation:** If a match was initiated by liking a specific prompt/photo, that reference must remain stable even if the user later deletes it
+- **Query complexity:** Using `_id` would require querying without the `deletedAt` filter to resolve references, making queries messy
+
+```typescript
+likes: defineTable({
+  fromUserId: v.string(),
+  toUserId: v.string(),
+  contentType: v.union(v.literal("photo"), v.literal("prompt")),
+  contentReference: v.string(), // References the custom `id`, not `_id`
+  message: v.optional(v.string()),
+});
+```
+
+**Note:** We *could* remove the custom `id` field and use `_id` directly for references by changing the schema to use typed IDs:
+
+```typescript
+// Alternative approach (not used due to reason #2 below)
+contentReference: v.union(v.id("profilePhotos"), v.id("profilePrompts"))
+```
+
+This would give us type-safe references and eliminate the custom `id` field for stable references. However, **optimistic updates** (reason #2) make this approach impractical.
+
+### 2. Optimistic Updates Compatibility
+
+Convex's `_id` is only assigned by the server after a mutation completes, which breaks optimistic updates:
+
+**The Problem:**
+
+- Client needs an ID **immediately** to display the new prompt/photo in the UI
+- The real `_id` doesn't exist until the server responds
+- Using temporary IDs that get replaced causes:
+  - React key instability (remounting/flickering)
+  - Caching complexity (need to migrate temp IDs to real IDs)
+  - Editing conflicts (can't edit a document that doesn't have a server `_id` yet)
+
+**Example Issue:**
+
+```typescript
+// User adds a prompt optimistically
+const tempId = crypto.randomUUID(); // Client-generated
+// Show in UI immediately with tempId
+
+// Server processes mutation, assigns _id = "abc123"
+// Now React key changes from tempId → "abc123"
+// Component remounts, causing UI flash
+```
+
+**The Solution:**
+Generate the `id` on the **client side** before calling the mutation, then pass it as an argument:
+
+```typescript
+// Client
+const id = crypto.randomUUID();
+// Use the same `id` for optimistic update
+
+// Server (deterministic)
+export const addPrompt = mutation({
+  args: {
+    id: v.string(), // Client-provided
+    promptId: v.string(),
+    answer: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("profilePrompts", {
+      id: args.id, // Stable, client-controlled ID
+      // ...
+    });
+    return { id: args.id };
+  },
+});
+```
+
+This approach:
+
+- ✅ Makes mutations deterministic (no `crypto.randomUUID()` inside mutations)
+- ✅ Enables seamless optimistic updates (same ID from client to server)
+- ✅ Keeps React keys stable (no remounting)
+- ✅ Allows immediate navigation/editing
+- ✅ Maintains stable references for likes
+
+---
+
 ## Async filterWith for future database queries
 
 Currently `filterWith` in `convex/profiles.ts` has a `biome-ignore` comment because the function has no `await` but `filterWith` requires `async` (returns `Promise<boolean>`). In the future, we might want to do async stuff like database queries inside the filter (e.g., checking blocks, verifying relationships, etc.). Here's an example with blocking:
