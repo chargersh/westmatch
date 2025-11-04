@@ -220,10 +220,19 @@ export const reorderPrompts = mutation({
       );
     }
 
-    // Map prompts in the order provided by the client
-    const prompts = args.promptAnswerIds.map((id) => {
-      const prompt = allPrompts.find((p) => p.id === id);
+    // Map prompts in the order provided by the client, ensuring uniqueness
+    const promptsById = new Map(
+      allPrompts.map((prompt) => [prompt.id, prompt])
+    );
+    const seenIds = new Set<string>();
 
+    const prompts = args.promptAnswerIds.map((id) => {
+      if (seenIds.has(id)) {
+        throw new Error(`Prompt answer ${id} provided more than once`);
+      }
+      seenIds.add(id);
+
+      const prompt = promptsById.get(id);
       if (!prompt) {
         throw new Error(`Prompt answer ${id} not found`);
       }

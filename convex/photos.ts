@@ -157,10 +157,17 @@ export const reorderPhotos = mutation({
       );
     }
 
-    // Map photos in the order provided by the client
-    const photos = args.photoIds.map((id) => {
-      const photo = allPhotos.find((p) => p.id === id);
+    // Map photos in the order provided by the client, ensuring uniqueness
+    const photosById = new Map(allPhotos.map((photo) => [photo.id, photo]));
+    const seenIds = new Set<string>();
 
+    const photos = args.photoIds.map((id) => {
+      if (seenIds.has(id)) {
+        throw new Error(`Photo ${id} provided more than once`);
+      }
+      seenIds.add(id);
+
+      const photo = photosById.get(id);
       if (!photo) {
         throw new Error(`Photo ${id} not found`);
       }
