@@ -4,7 +4,7 @@ export const PHOTOS_CONFIG = {
 } as const;
 
 export const PROMPTS_CONFIG = {
-  MAX_PROMPTS: 3,
+  REQUIRED_PROMPTS: 3, // Exactly 3 prompts required (min = max, like Hinge)
   MAX_ANSWER_LENGTH: 150,
 } as const;
 
