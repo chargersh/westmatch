@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.9.6",
+    "@convex-dev/r2": "^0.7.3",
     "@convex-dev/resend": "^0.1.13",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-label": "^2.1.7",

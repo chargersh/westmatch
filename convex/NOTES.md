@@ -22,11 +22,11 @@ likes: defineTable({
 });
 ```
 
-**Note:** We *could* remove the custom `id` field and use `_id` directly for references by changing the schema to use typed IDs:
+**Note:** We _could_ remove the custom `id` field and use `_id` directly for references by changing the schema to use typed IDs:
 
 ```typescript
 // Alternative approach (not used due to reason #2 below)
-contentReference: v.union(v.id("profilePhotos"), v.id("profilePrompts"))
+contentReference: v.union(v.id("profilePhotos"), v.id("profilePrompts"));
 ```
 
 This would give us type-safe references and eliminate the custom `id` field for stable references. However, **optimistic updates** (reason #2) make this approach impractical.
@@ -88,6 +88,81 @@ This approach:
 - ✅ Keeps React keys stable (no remounting)
 - ✅ Allows immediate navigation/editing
 - ✅ Maintains stable references for likes
+
+---
+
+## Profile Completion Check Helper
+
+This helper function should be added to `convex/helpers.ts` in a future PR and called from mutations:
+
+```typescript
+import type { Doc } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+import { PHOTOS_CONFIG, PROMPTS_CONFIG } from "./constants";
+
+/**
+ * Check if profile meets completion requirements and update profileComplete flag if needed.
+ * Only runs if profile is not already marked complete.
+ * Optimized to only fetch what wasn't already counted by the caller.
+ */
+export async function checkAndUpdateProfileComplete(
+  ctx: MutationCtx,
+  profile: Doc<"profiles">,
+  options: {
+    photoCount?: number;
+    promptCount?: number;
+  }
+) {
+  if (profile.profileComplete) {
+    return; // Already complete, skip check
+  }
+
+  // Count only what wasn't provided
+  const photoCount =
+    options.photoCount ??
+    (
+      await ctx.db
+        .query("profilePhotos")
+        .withIndex("by_profileId_orderIndex", (q) =>
+          q.eq("profileId", profile._id)
+        )
+        .filter((q) => q.eq(q.field("deletedAt"), undefined))
+        .collect()
+    ).length;
+
+  const promptCount =
+    options.promptCount ??
+    (
+      await ctx.db
+        .query("profilePrompts")
+        .withIndex("by_profileId_orderIndex", (q) =>
+          q.eq("profileId", profile._id)
+        )
+        .filter((q) => q.eq(q.field("deletedAt"), undefined))
+        .collect()
+    ).length;
+
+  // Define completion criteria
+  const hasMinPhotos = photoCount >= PHOTOS_CONFIG.MIN_PHOTOS;
+  const hasMinPrompts = promptCount >= PROMPTS_CONFIG.MAX_PROMPTS;
+  const hasRequiredFields = Boolean(
+    profile.displayName &&
+      profile.bio &&
+      profile.bio.length > 0 &&
+      profile.major
+  );
+
+  if (hasMinPhotos && hasMinPrompts && hasRequiredFields) {
+    await ctx.db.patch(profile._id, { profileComplete: true });
+  }
+}
+```
+
+It should be added in a future PR to:
+
+- `addPhoto` / `deletePhoto` mutations in `convex/photos.ts`
+- `addPrompt` / `updatePrompt`(?) / `deletePrompt` mutations in `convex/prompts.ts`
+- `updateProfile` mutation in `convex/profiles.ts`
 
 ---
 
