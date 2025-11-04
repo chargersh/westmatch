@@ -5,6 +5,7 @@ import { PROMPT_IDS, PROMPTS_CONFIG, type PromptId } from "./constants";
 
 export const addPrompt = mutation({
   args: {
+    id: v.string(),
     promptId: v.string(),
     answer: v.string(),
   },
@@ -59,22 +60,20 @@ export const addPrompt = mutation({
       throw new Error("You've already answered this prompt");
     }
 
-    const customId = crypto.randomUUID();
-
     const maxOrderIndex =
       existingPrompts.length > 0
         ? Math.max(...existingPrompts.map((p) => p.orderIndex))
         : -1;
 
     await ctx.db.insert("profilePrompts", {
-      id: customId,
+      id: args.id,
       profileId: profile._id,
       promptId: args.promptId,
       answer: args.answer.trim(),
       orderIndex: maxOrderIndex + 1,
     });
 
-    return { id: customId };
+    return { id: args.id };
   },
 });
 
