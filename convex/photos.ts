@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { authComponent } from "./auth";
 import { PHOTOS_CONFIG } from "./constants";
+import { checkAndUpdateProfileComplete } from "./helpers";
 import { r2 } from "./r2";
 
 export const addPhoto = mutation({
@@ -59,6 +60,11 @@ export const addPhoto = mutation({
       orderIndex: maxOrderIndex + 1,
     });
 
+    // Check if profile is now complete
+    await checkAndUpdateProfileComplete(ctx, profile, {
+      photoCount: existingPhotos.length + 1,
+    });
+
     return { id: args.id };
   },
 });
@@ -114,6 +120,9 @@ export const deletePhoto = mutation({
       await ctx.db.delete(photo._id);
       await r2.deleteObject(ctx, photo.key);
     }
+
+    // Check if profile completion status changed
+    await checkAndUpdateProfileComplete(ctx, profile, {});
   },
 });
 

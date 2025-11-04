@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { authComponent } from "./auth";
 import { PROMPT_IDS, PROMPTS_CONFIG, type PromptId } from "./constants";
+import { checkAndUpdateProfileComplete } from "./helpers";
 
 export const addPrompt = mutation({
   args: {
@@ -57,9 +58,9 @@ export const addPrompt = mutation({
       .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
 
-    if (existingPrompts.length >= PROMPTS_CONFIG.MAX_PROMPTS) {
+    if (existingPrompts.length >= PROMPTS_CONFIG.REQUIRED_PROMPTS) {
       throw new Error(
-        `Maximum of ${PROMPTS_CONFIG.MAX_PROMPTS} prompts allowed`
+        `Maximum of ${PROMPTS_CONFIG.REQUIRED_PROMPTS} prompts allowed`
       );
     }
 
@@ -81,6 +82,11 @@ export const addPrompt = mutation({
       promptId: args.promptId,
       answer: args.answer.trim(),
       orderIndex: maxOrderIndex + 1,
+    });
+
+    // Check if profile is now complete
+    await checkAndUpdateProfileComplete(ctx, profile, {
+      promptCount: existingPrompts.length + 1,
     });
 
     return { id: args.id };
@@ -177,6 +183,9 @@ export const removePrompt = mutation({
     await ctx.db.patch(promptAnswer._id, {
       deletedAt: Date.now(),
     });
+
+    // Check if profile completion status changed
+    await checkAndUpdateProfileComplete(ctx, profile, {});
   },
 });
 
@@ -200,7 +209,7 @@ export const reorderPrompts = mutation({
       throw new Error("Profile not found");
     }
 
-    if (args.promptAnswerIds.length > PROMPTS_CONFIG.MAX_PROMPTS) {
+    if (args.promptAnswerIds.length > PROMPTS_CONFIG.REQUIRED_PROMPTS) {
       throw new Error("Too many prompts provided");
     }
 

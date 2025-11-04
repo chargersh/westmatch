@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import { getProfileContent } from "./helpers";
+import { checkAndUpdateProfileComplete, getProfileContent } from "./helpers";
 
 export const getMyProfile = query({
   args: {},
@@ -192,5 +192,14 @@ export const updateProfile = mutation({
       ...args,
       updatedAt: Date.now(),
     });
+
+    // Re-fetch profile to get updated values for completion check
+    const updatedProfile = await ctx.db.get(profile._id);
+    if (!updatedProfile) {
+      throw new Error("Profile not found after update");
+    }
+
+    // Check if profile completion status changed
+    await checkAndUpdateProfileComplete(ctx, updatedProfile, {});
   },
 });
