@@ -1,3 +1,8 @@
+export const PHOTOS_CONFIG = {
+  MAX_PHOTOS: 6,
+  MIN_PHOTOS: 3,
+} as const;
+
 export const PROMPTS_CONFIG = {
   MAX_PROMPTS: 3,
   MAX_ANSWER_LENGTH: 150,

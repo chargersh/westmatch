@@ -49,7 +49,6 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_userId", ["userId"])
-    .index("by_interestedIn", ["interestedIn"])
     .index("by_interestedIn_profileComplete_isActive", [
       "interestedIn",
       "profileComplete",
@@ -85,7 +84,8 @@ export default defineSchema({
     message: v.optional(v.string()),
   })
     .index("by_toUserId_and_fromUserId", ["toUserId", "fromUserId"])
-    .index("by_fromUserId_and_toUserId", ["fromUserId", "toUserId"]),
+    .index("by_fromUserId_and_toUserId", ["fromUserId", "toUserId"])
+    .index("by_contentReference", ["contentReference"]),
 
   passes: defineTable({
     fromUserId: v.string(),
