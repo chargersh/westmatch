@@ -19,7 +19,7 @@ export const addPhoto = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -82,7 +82,7 @@ export const deletePhoto = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -139,7 +139,7 @@ export const reorderPhotos = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
