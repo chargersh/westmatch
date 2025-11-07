@@ -204,13 +204,12 @@ convex/
 ├── matches.ts                # Match management
 │   ├── getMyMatches          # List all active matches (paginated)
 │   ├── getMatchedProfile     # View full profile of a matched user
-│   ├── unmatch               # End a match
-│   └── getConversation       # Match + last message + unread count
+│   └── unmatch               # End a match
 │
-├── messages.ts               # Messaging between matches
-│   ├── sendMessage           # Send message to match
-│   ├── getMessages           # Get paginated full chat history
-│   └── markMessagesAsRead    # Batch mark unread messages as read
+├── messages.ts                 # Messaging between matches
+│   ├── sendMessage             # Send message to match
+│   ├── getConversationMessages # Get paginated full chat history
+│   └── markMessagesAsRead      # Batch mark unread messages as read
 │
 ├── photos.ts                 # Photo management
 │   ├── uploadPhoto           # Store photo with R2 key + orderIndex, auto-checks profileComplete
