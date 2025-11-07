@@ -25,6 +25,18 @@ export const createLike = mutation({
       throw new Error("Cannot like yourself");
     }
 
+    // Verify target user has an active profile
+    const targetProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId_isActive", (q) =>
+        q.eq("userId", args.toUserId).eq("isActive", true)
+      )
+      .first();
+
+    if (!targetProfile) {
+      throw new Error("Target user profile not found or inactive");
+    }
+
     // Check if already liked
     const existingLike = await ctx.db
       .query("likes")
@@ -100,6 +112,18 @@ export const createPass = mutation({
     // Can't pass on yourself
     if (fromUserId === args.toUserId) {
       throw new Error("Cannot pass on yourself");
+    }
+
+    // Verify target user has an active profile
+    const targetProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId_isActive", (q) =>
+        q.eq("userId", args.toUserId).eq("isActive", true)
+      )
+      .first();
+
+    if (!targetProfile) {
+      throw new Error("Target user profile not found or inactive");
     }
 
     // Check if already passed
