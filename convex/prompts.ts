@@ -19,7 +19,7 @@ export const addPrompt = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -107,7 +107,7 @@ export const updatePrompt = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -160,7 +160,7 @@ export const removePrompt = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -202,7 +202,7 @@ export const reorderPrompts = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {

@@ -17,6 +17,8 @@ import type * as emails_reset_password_email from "../emails/reset_password_emai
 import type * as emails_verification_email from "../emails/verification_email.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
+import type * as likes from "../likes.js";
+import type * as matches from "../matches.js";
 import type * as notifications from "../notifications.js";
 import type * as photos from "../photos.js";
 import type * as profiles from "../profiles.js";
@@ -47,6 +49,8 @@ declare const fullApi: ApiFromModules<{
   "emails/verification_email": typeof emails_verification_email;
   helpers: typeof helpers;
   http: typeof http;
+  likes: typeof likes;
+  matches: typeof matches;
   notifications: typeof notifications;
   photos: typeof photos;
   profiles: typeof profiles;

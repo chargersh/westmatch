@@ -48,7 +48,7 @@ export default defineSchema({
     isActive: v.boolean(),
     updatedAt: v.number(),
   })
-    .index("by_userId", ["userId"])
+    .index("by_userId_isActive", ["userId", "isActive"])
     .index("by_interestedIn_profileComplete_isActive", [
       "interestedIn",
       "profileComplete",

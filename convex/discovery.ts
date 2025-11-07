@@ -17,7 +17,7 @@ export const getDiscoveryProfiles = query({
     // Get current user's profile
     const myProfile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!myProfile) {

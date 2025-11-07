@@ -14,7 +14,7 @@ export const getMyProfile = query({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -60,7 +60,7 @@ export const createProfile = mutation({
 
     const existing = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (existing) {
@@ -94,7 +94,7 @@ export const deactivateProfile = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -125,7 +125,7 @@ export const activateProfile = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
@@ -181,7 +181,7 @@ export const updateProfile = mutation({
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
+      .withIndex("by_userId_isActive", (q) => q.eq("userId", authUser._id))
       .first();
 
     if (!profile) {
