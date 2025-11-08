@@ -8,6 +8,49 @@ export const PROMPTS_CONFIG = {
   MAX_ANSWER_LENGTH: 150,
 } as const;
 
+export const ZODIAC_SIGNS = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
+] as const;
+
+export const RELATIONSHIP_GOALS = [
+  "Long-term relationship",
+  "Situationship",
+  "Figuring it out",
+  "New friends",
+] as const;
+
+export const DRINKING_OPTIONS = [
+  "Yes",
+  "Sometimes",
+  "No",
+  "Prefer not to say",
+] as const;
+
+export const SMOKING_OPTIONS = [
+  "Yes",
+  "Sometimes",
+  "No",
+  "Prefer not to say",
+] as const;
+
+export const EXERCISE_OPTIONS = [
+  "Every day",
+  "Often",
+  "Sometimes",
+  "Never",
+] as const;
+
 export const PROMPT_IDS = [
   "together_we_could",
   "geek_out_on",

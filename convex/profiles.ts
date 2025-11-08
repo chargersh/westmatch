@@ -169,8 +169,50 @@ export const updateProfile = mutation({
       })
     ),
     bio: v.optional(v.string()),
-    drinking: v.optional(v.string()),
-    smoking: v.optional(v.string()),
+    drinking: v.optional(
+      v.union(
+        v.literal("Yes"),
+        v.literal("Sometimes"),
+        v.literal("No"),
+        v.literal("Prefer not to say")
+      )
+    ),
+    smoking: v.optional(
+      v.union(
+        v.literal("Yes"),
+        v.literal("Sometimes"),
+        v.literal("No"),
+        v.literal("Prefer not to say")
+      )
+    ),
+    height: v.optional(v.number()),
+    university: v.optional(v.string()),
+    hometown: v.optional(v.string()),
+    relationshipGoals: v.optional(
+      v.union(
+        v.literal("Long-term relationship"),
+        v.literal("Situationship"),
+        v.literal("Figuring it out"),
+        v.literal("New friends")
+      )
+    ),
+    zodiac: v.optional(
+      v.union(
+        v.literal("Aries"),
+        v.literal("Taurus"),
+        v.literal("Gemini"),
+        v.literal("Cancer"),
+        v.literal("Leo"),
+        v.literal("Virgo"),
+        v.literal("Libra"),
+        v.literal("Scorpio"),
+        v.literal("Sagittarius"),
+        v.literal("Capricorn"),
+        v.literal("Aquarius"),
+        v.literal("Pisces")
+      )
+    ),
+    languages: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const authUser = await authComponent.safeGetAuthUser(ctx);

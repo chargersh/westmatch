@@ -44,6 +44,12 @@ export default defineSchema({
     bio: v.optional(v.string()),
     drinking: v.optional(v.string()),
     smoking: v.optional(v.string()),
+    height: v.optional(v.number()), // Height in centimeters
+    university: v.optional(v.string()),
+    hometown: v.optional(v.string()),
+    relationshipGoals: v.optional(v.string()),
+    zodiac: v.optional(v.string()),
+    languages: v.optional(v.array(v.string())), // Free text array
     profileComplete: v.boolean(),
     isActive: v.boolean(),
     updatedAt: v.number(),
