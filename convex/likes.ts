@@ -51,15 +51,6 @@ export const createLike = mutation({
 
     const trimmedMessage = args.message?.trim() || undefined;
 
-    // Create the like
-    const likeId = await ctx.db.insert("likes", {
-      fromUserId,
-      toUserId: args.toUserId,
-      contentType: args.contentType,
-      contentReference: args.contentReference,
-      message: trimmedMessage,
-    });
-
     // Check if they liked us back
     const reciprocalLike = await ctx.db
       .query("likes")
@@ -67,6 +58,16 @@ export const createLike = mutation({
         q.eq("fromUserId", args.toUserId).eq("toUserId", fromUserId)
       )
       .first();
+
+    // Create the like with correct isMatched status
+    const likeId = await ctx.db.insert("likes", {
+      fromUserId,
+      toUserId: args.toUserId,
+      contentType: args.contentType,
+      contentReference: args.contentReference,
+      message: trimmedMessage,
+      isMatched: !!reciprocalLike,
+    });
 
     if (reciprocalLike) {
       // They liked us back! Check if match already exists
@@ -91,6 +92,9 @@ export const createLike = mutation({
           isActive: true,
           updatedAt: Date.now(),
         });
+
+        // Mark reciprocal like as matched
+        await ctx.db.patch(reciprocalLike._id, { isMatched: true });
 
         // If user wrote a message, create it in the conversation
         if (trimmedMessage) {
@@ -202,8 +206,8 @@ export const getProfilesWhoLikedMe = query({
 
     const paginatedLikes = await ctx.db
       .query("likes")
-      .withIndex("by_toUserId_and_fromUserId", (q) =>
-        q.eq("toUserId", authUser._id)
+      .withIndex("by_toUserId_isMatched", (q) =>
+        q.eq("toUserId", authUser._id).eq("isMatched", false)
       )
       .order("desc")
       .paginate(args.paginationOpts);

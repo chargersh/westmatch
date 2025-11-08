@@ -58,7 +58,9 @@ export const getMyMatches = query({
         // Get initiating like to determine turn for brand new matches
         const initiatingLike = await ctx.db.get(match.initiatingLikeId);
         if (!initiatingLike) {
-          return null;
+          throw new Error(
+            `Data integrity error: Match ${match._id} missing initiatingLike`
+          );
         }
 
         // Determine whose turn it is

@@ -82,8 +82,9 @@ export default defineSchema({
     contentType: v.union(v.literal("photo"), v.literal("prompt")),
     contentReference: v.string(),
     message: v.optional(v.string()),
+    isMatched: v.boolean(),
   })
-    .index("by_toUserId_and_fromUserId", ["toUserId", "fromUserId"])
+    .index("by_toUserId_isMatched", ["toUserId", "isMatched"])
     .index("by_fromUserId_and_toUserId", ["fromUserId", "toUserId"])
     .index("by_contentReference", ["contentReference"]),
 

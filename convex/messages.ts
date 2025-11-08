@@ -27,6 +27,9 @@ export const sendMessage = mutation({
     if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
       throw new Error("User is not part of this match");
     }
+    if (!match.isActive) {
+      throw new Error("This conversation is no longer available");
+    }
 
     const recipientId =
       match.user1Id === authUser._id ? match.user2Id : match.user1Id;
@@ -114,6 +117,9 @@ export const markMessagesAsRead = mutation({
     if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
       throw new Error("User is not part of this match");
     }
+    if (!match.isActive) {
+      throw new Error("This conversation is no longer available");
+    }
 
     const readMarker = await ctx.db
       .query("conversationRead")
@@ -159,6 +165,9 @@ export const getConversationMessages = query({
     }
     if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
       throw new Error("User is not part of this match");
+    }
+    if (!match.isActive) {
+      throw new Error("This conversation is no longer available");
     }
 
     const otherUserId =
