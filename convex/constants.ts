@@ -28,6 +28,7 @@ export const RELATIONSHIP_GOALS = [
   "Situationship",
   "Figuring it out",
   "New friends",
+  "Prefer not to say",
 ] as const;
 
 export const DRINKING_OPTIONS = [
@@ -42,13 +43,6 @@ export const SMOKING_OPTIONS = [
   "Sometimes",
   "No",
   "Prefer not to say",
-] as const;
-
-export const EXERCISE_OPTIONS = [
-  "Every day",
-  "Often",
-  "Sometimes",
-  "Never",
 ] as const;
 
 export const PROMPT_IDS = [

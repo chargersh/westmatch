@@ -193,7 +193,8 @@ export const updateProfile = mutation({
         v.literal("Long-term relationship"),
         v.literal("Situationship"),
         v.literal("Figuring it out"),
-        v.literal("New friends")
+        v.literal("New friends"),
+        v.literal("Prefer not to say")
       )
     ),
     zodiac: v.optional(
