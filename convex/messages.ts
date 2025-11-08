@@ -15,16 +15,28 @@ export const sendMessage = mutation({
       throw new Error("User not authenticated");
     }
 
-    if (!args.content.trim()) {
+    const content = args.content.trim();
+    if (!content) {
       throw new Error("Message cannot be empty");
     }
+
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
+      throw new Error("User is not part of this match");
+    }
+
+    const recipientId =
+      match.user1Id === authUser._id ? match.user2Id : match.user1Id;
 
     const now = Date.now();
 
     const messageId = await ctx.db.insert("messages", {
       matchId: args.matchId,
       senderId: authUser._id,
-      content: args.content,
+      content,
       sentAt: now,
     });
 
@@ -49,15 +61,6 @@ export const sendMessage = mutation({
         unreadCount: 0,
       });
     }
-
-    // Update recipient's unread count
-    const match = await ctx.db.get(args.matchId);
-    if (!match) {
-      throw new Error("Match not found");
-    }
-
-    const recipientId =
-      match.user1Id === authUser._id ? match.user2Id : match.user1Id;
 
     const recipientRead = await ctx.db
       .query("conversationRead")
@@ -85,7 +88,7 @@ export const sendMessage = mutation({
     await ctx.db.patch(args.matchId, {
       lastMessageAt: now,
       lastMessageSenderId: authUser._id,
-      lastMessage: args.content,
+      lastMessage: content,
       updatedAt: now,
     });
 
@@ -102,6 +105,14 @@ export const markMessagesAsRead = mutation({
 
     if (!authUser) {
       throw new Error("User not authenticated");
+    }
+
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
+      throw new Error("User is not part of this match");
     }
 
     const readMarker = await ctx.db
@@ -145,6 +156,9 @@ export const getConversationMessages = query({
     const match = await ctx.db.get(args.matchId);
     if (!match) {
       throw new Error("Match not found");
+    }
+    if (match.user1Id !== authUser._id && match.user2Id !== authUser._id) {
+      throw new Error("User is not part of this match");
     }
 
     const otherUserId =
