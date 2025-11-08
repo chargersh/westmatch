@@ -99,7 +99,7 @@ export default defineSchema({
     isActive: v.boolean(),
     lastMessageAt: v.optional(v.number()),
     lastMessageSenderId: v.optional(v.string()),
-    lastMessagePreview: v.optional(v.string()),
+    lastMessage: v.optional(v.string()),
     updatedAt: v.number(),
   })
     .index("by_user1Id_and_user2Id", ["user1Id", "user2Id"])
@@ -110,8 +110,14 @@ export default defineSchema({
     senderId: v.string(),
     content: v.string(),
     sentAt: v.number(),
-    readAt: v.optional(v.number()),
   }).index("by_matchId_and_sentAt", ["matchId", "sentAt"]),
+
+  conversationRead: defineTable({
+    matchId: v.id("matches"),
+    userId: v.string(),
+    lastReadMessageAt: v.number(),
+    unreadCount: v.number(),
+  }).index("by_matchId_and_userId", ["matchId", "userId"]),
 
   push_subscriptions: defineTable({
     userId: v.string(),

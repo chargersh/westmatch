@@ -224,3 +224,57 @@ convex/
 │
 └── notifications.ts          # Push notifications (already exists)
 ```
+
+---
+
+## Messaging: Auto-Mark as Read with Page Visibility
+
+The `markMessagesAsRead` mutation sets `lastReadMessageAt = now` and `unreadCount = 0`. Only call it when user is actually viewing the chat (not backgrounded).
+
+**Hook: `usePageVisibility()`**
+
+```typescript
+// src/features/chat/hooks/use-page-visibility.ts
+import { useState, useEffect } from "react";
+
+export function usePageVisibility() {
+  const [isVisible, setIsVisible] = useState(
+    typeof document !== "undefined" ? !document.hidden : true
+  );
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  return isVisible;
+}
+```
+
+**Usage in Chat Component:**
+
+```typescript
+const isVisible = usePageVisibility();
+const messagesData = useQuery(api.messages.getConversationMessages, {
+  matchId,
+});
+const markAsRead = useMutation(api.messages.markMessagesAsRead);
+
+useEffect(() => {
+  // Only mark as read when messages exist AND page is visible
+  if (messagesData?.messages?.length && isVisible) {
+    markAsRead({ matchId });
+  }
+}, [messagesData?.messages?.length, isVisible, matchId, markAsRead]);
+```
+
+**Why this matters for PWAs:**
+- Without visibility check, messages mark as read when app is backgrounded/in app switcher
+- Service workers keep connections alive even when app is minimized
+- The visibility check ensures messages only auto-clear when user is actually looking at the screen

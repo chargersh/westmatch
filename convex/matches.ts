@@ -9,7 +9,7 @@ export const getMyMatches = query({
     const authUser = await authComponent.safeGetAuthUser(ctx);
 
     if (!authUser) {
-      return [];
+      return { yourTurn: [], theirTurn: [] };
     }
 
     const userId = authUser._id;
@@ -47,15 +47,46 @@ export const getMyMatches = query({
         const photos = await getProfilePhotos(ctx, profile._id);
         const firstPhoto = photos[0];
 
+        // Get unread count for this conversation
+        const readMarker = await ctx.db
+          .query("conversationRead")
+          .withIndex("by_matchId_and_userId", (q) =>
+            q.eq("matchId", match._id).eq("userId", userId)
+          )
+          .first();
+
+        // Get initiating like to determine turn for brand new matches
+        const initiatingLike = await ctx.db.get(match.initiatingLikeId);
+        if (!initiatingLike) {
+          return null;
+        }
+
+        // Determine whose turn it is
+        // lastActionUserId = who sent last message OR who sent initiating like (if no messages)
+        const lastActionUserId =
+          match.lastMessageSenderId ?? initiatingLike.fromUserId;
+        const isMyTurn = lastActionUserId !== userId;
+
         return {
           match,
           profile,
           firstPhoto,
+          unreadCount: readMarker?.unreadCount ?? 0,
+          isMyTurn,
         };
       })
     );
 
-    return matchesWithProfiles.filter((m) => m !== null);
+    const validMatches = matchesWithProfiles.filter((m) => m !== null);
+
+    // Separate by turn
+    const yourTurn = validMatches.filter((m) => m.isMyTurn);
+    const theirTurn = validMatches.filter((m) => !m.isMyTurn);
+
+    return {
+      yourTurn,
+      theirTurn,
+    };
   },
 });
 

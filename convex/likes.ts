@@ -2,7 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import { getProfileContent } from "./helpers";
+import { getLikedContent, getProfileContent } from "./helpers";
 
 export const createLike = mutation({
   args: {
@@ -49,13 +49,15 @@ export const createLike = mutation({
       throw new Error("Already liked this user");
     }
 
+    const trimmedMessage = args.message?.trim() || undefined;
+
     // Create the like
     const likeId = await ctx.db.insert("likes", {
       fromUserId,
       toUserId: args.toUserId,
       contentType: args.contentType,
       contentReference: args.contentReference,
-      message: args.message?.trim(),
+      message: trimmedMessage,
     });
 
     // Check if they liked us back
@@ -81,14 +83,49 @@ export const createLike = mutation({
         .unique();
 
       if (!existingMatch) {
-        // Create the match
-        await ctx.db.insert("matches", {
+        // Create the match with the FIRST like (reciprocal) as initiating
+        const matchId = await ctx.db.insert("matches", {
           user1Id,
           user2Id,
-          initiatingLikeId: likeId,
+          initiatingLikeId: reciprocalLike._id,
           isActive: true,
           updatedAt: Date.now(),
         });
+
+        // If user wrote a message, create it in the conversation
+        if (trimmedMessage) {
+          const now = Date.now();
+
+          await ctx.db.insert("messages", {
+            matchId,
+            senderId: fromUserId,
+            content: trimmedMessage,
+            sentAt: now,
+          });
+
+          // Update sender's read marker
+          await ctx.db.insert("conversationRead", {
+            matchId,
+            userId: fromUserId,
+            lastReadMessageAt: now,
+            unreadCount: 0,
+          });
+
+          // Update recipient's read marker
+          await ctx.db.insert("conversationRead", {
+            matchId,
+            userId: args.toUserId,
+            lastReadMessageAt: 0,
+            unreadCount: 1,
+          });
+
+          await ctx.db.patch(matchId, {
+            lastMessageAt: now,
+            lastMessageSenderId: fromUserId,
+            lastMessage: trimmedMessage,
+            updatedAt: now,
+          });
+        }
       }
     }
 
@@ -188,8 +225,16 @@ export const getProfilesWhoLikedMe = query({
 
           const { photos, prompts } = await getProfileContent(ctx, profile._id);
 
+          // Fetch the actual content they liked (from YOUR profile)
+          const likedContent = await getLikedContent(
+            ctx,
+            like.contentType,
+            like.contentReference
+          );
+
           return {
             ...like,
+            likedContent,
             profile,
             photos,
             prompts,
