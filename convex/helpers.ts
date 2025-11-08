@@ -39,6 +39,59 @@ export async function getProfilePrompts(
 }
 
 /**
+ * Fetch a single photo by its custom ID with R2 URL
+ * Ignores soft deletes - used for conversation history where deleted content should remain visible
+ */
+export async function getPhotoById(ctx: QueryCtx, photoId: string) {
+  const photo = await ctx.db
+    .query("profilePhotos")
+    .withIndex("by_custom_id", (q) => q.eq("id", photoId))
+    .first();
+
+  if (!photo) {
+    return null;
+  }
+
+  return {
+    ...photo,
+    url: await r2.getUrl(photo.key),
+  };
+}
+
+/**
+ * Fetch a single prompt by its custom ID
+ * Ignores soft deletes - used for conversation history where deleted content should remain visible
+ */
+export async function getPromptById(ctx: QueryCtx, promptId: string) {
+  const prompt = await ctx.db
+    .query("profilePrompts")
+    .withIndex("by_custom_id", (q) => q.eq("id", promptId))
+    .first();
+
+  if (!prompt) {
+    return null;
+  }
+
+  return prompt;
+}
+
+/**
+ * Fetch liked content (photo or prompt) by content type and reference ID
+ * Used for displaying initiating likes in conversations
+ * Ignores soft deletes to preserve conversation history
+ */
+export async function getLikedContent(
+  ctx: QueryCtx,
+  contentType: "photo" | "prompt",
+  contentReference: string
+) {
+  if (contentType === "photo") {
+    return await getPhotoById(ctx, contentReference);
+  }
+  return await getPromptById(ctx, contentReference);
+}
+
+/**
  * Fetch both photos and prompts for a profile
  */
 export async function getProfileContent(
