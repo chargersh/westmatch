@@ -1,18 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config/site.config";
 import Providers from "@/providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const modernEra = localFont({
+  src: "../../public/fonts/modern-era.woff2",
+  variable: "--font-modern-era",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const tiempos = localFont({
+  src: [
+    {
+      path: "../../public/fonts/tiempos-text-vf-roman.woff2",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/tiempos-text-vf-italic.woff2",
+      style: "italic",
+    },
+  ],
+  variable: "--font-tiempos",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +55,7 @@ export default function RootLayout({
   return (
     <html className="overscroll-none" lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${modernEra.variable} ${tiempos.variable} font-sans antialiased`}
       >
         <Providers>{children}</Providers>
         <Toaster />
