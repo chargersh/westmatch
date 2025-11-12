@@ -3,6 +3,24 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { PHOTOS_CONFIG, PROMPTS_CONFIG } from "./constants";
 import { r2 } from "./r2";
 
+const MIN_BIRTH_YEAR = 1900;
+
+export function validateBirthDate(birthDate: number): void {
+  if (!Number.isFinite(birthDate) || birthDate < 0) {
+    throw new Error("Invalid birthDate: must be a valid timestamp");
+  }
+  const birth = new Date(birthDate);
+  const today = new Date();
+  if (birth > today) {
+    throw new Error("Invalid birthDate: cannot be in the future");
+  }
+  if (birth.getFullYear() < MIN_BIRTH_YEAR) {
+    throw new Error(
+      `Invalid birthDate: year must be ${MIN_BIRTH_YEAR} or later`
+    );
+  }
+}
+
 /**
  * Fetch photos for a profile, excluding soft-deleted ones, with R2 URLs
  */

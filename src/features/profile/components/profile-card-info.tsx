@@ -25,6 +25,8 @@ import {
 import type { ProfileCardInfoProps } from "../types";
 import { calculateAge } from "../utils";
 
+const PREFER_NOT_TO_SAY = "Prefer not to say";
+
 function Pill({
   icon: Icon,
   label,
@@ -59,11 +61,11 @@ function buildQuickInfoPills(profile: ProfileCardInfoProps["profile"]) {
     pills.push(<Pill icon={Sparkles} key="zodiac" label={profile.zodiac} />);
   }
 
-  if (profile.drinking && profile.drinking !== "Prefer not to say") {
+  if (profile.drinking && profile.drinking !== PREFER_NOT_TO_SAY) {
     pills.push(<Pill icon={Wine} key="drinking" label={profile.drinking} />);
   }
 
-  if (profile.smoking && profile.smoking !== "Prefer not to say") {
+  if (profile.smoking && profile.smoking !== PREFER_NOT_TO_SAY) {
     pills.push(<Pill icon={Cigarette} key="smoking" label={profile.smoking} />);
   }
 
@@ -170,7 +172,7 @@ export function ProfileCardInfo({ profile }: ProfileCardInfoProps) {
       )}
 
       {profile.relationshipGoals &&
-        profile.relationshipGoals !== "Prefer not to say" && (
+        profile.relationshipGoals !== PREFER_NOT_TO_SAY && (
           <>
             <ItemSeparator />
             <ProfileInfoRow content={profile.relationshipGoals} icon={Search} />

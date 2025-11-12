@@ -19,6 +19,8 @@ export type ProfileCardRootProps = {
 export type ProfileCardPhotoProps = {
   photo: Photo;
   onLike?: (photoId: string) => void; // photoId is photo.id (custom string ID, not _id)
+  alt?: string;
+  priority?: boolean;
 };
 
 export type ProfileCardPromptProps = {

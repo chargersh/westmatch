@@ -150,7 +150,8 @@
   @supports not selector(::-webkit-scrollbar) {
     .custom-scrollbar {
       scrollbar-width: thin;
-      scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+      scrollbar-color: oklch(from var(--muted-foreground) l c h / 0.4)
+        transparent;
     }
   }
   /* Hide scrollbar but keep scrolling functionality */
