@@ -43,3 +43,7 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+# Dev notes and guides
+implementation-guide/
+todo.md

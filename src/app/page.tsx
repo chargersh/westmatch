@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { ThemeToggler } from "@/components/theme-toggler";
+import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/features/auth/login-button";
 import { InstallPrompt } from "@/features/pwa/install-prompt";
 import { PushNotificationButton } from "@/features/pwa/push-notification-button";
@@ -14,6 +16,10 @@ export default function Home() {
       </div>
 
       <h1 className="font-bold text-3xl">WestMatch</h1>
+
+      <Link href="/testing">
+        <Button>View Profile Card Testing</Button>
+      </Link>
 
       <div className="flex flex-col gap-4">
         <div className="rounded border p-4">
