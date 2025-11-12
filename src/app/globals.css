@@ -121,3 +121,46 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+@layer utilities {
+  /* WebKit browsers only - more specific support check */
+  @supports selector(::-webkit-scrollbar) {
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: oklch(from var(--muted-foreground) l c h / 0.4);
+      border-radius: 4px;
+      background-clip: content-box;
+      -webkit-background-clip: content-box;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: oklch(from var(--muted-foreground) l c h / 0.6);
+    }
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: oklch(from var(--muted-foreground) l c h / 0.4)
+        transparent;
+    }
+  }
+  /* Hide scrollbar but keep scrolling functionality */
+  .hidden-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

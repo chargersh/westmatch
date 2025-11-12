@@ -1,7 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
-import { checkAndUpdateProfileComplete, getProfileContent } from "./helpers";
+import {
+  checkAndUpdateProfileComplete,
+  getProfileContent,
+  validateBirthDate,
+} from "./helpers";
 
 export const getMyProfile = query({
   args: {},
@@ -57,6 +61,8 @@ export const createProfile = mutation({
     if (!authUser) {
       throw new Error("User not authenticated");
     }
+
+    validateBirthDate(args.birthDate);
 
     const existing = await ctx.db
       .query("profiles")
@@ -220,6 +226,10 @@ export const updateProfile = mutation({
 
     if (!authUser) {
       throw new Error("User not authenticated");
+    }
+
+    if (args.birthDate !== undefined) {
+      validateBirthDate(args.birthDate);
     }
 
     const profile = await ctx.db
